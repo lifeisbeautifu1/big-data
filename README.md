@@ -1,5 +1,5 @@
 # Big Data
-## This repo contains my lab solutions
+## This monorepo contains my lab solutions
 
 - Introduction to MapReduce data processing model
 - Introduction to Apache Spark

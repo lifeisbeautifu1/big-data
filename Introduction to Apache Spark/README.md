@@ -47,27 +47,65 @@ val bikeWithLongestDuration = tripsInternal.keyBy(trip => trip.bikeId)
 Python:
 
 ```python
-def distance(a, b):
-  dist1 = (a.lat ** 2 - b.lat ** 2) + (a.long ** 2 - b.long ** 2)
-  dist2 = (b.lat ** 2 - a.lat ** 2) + (b.long ** 2 - a.long ** 2)
+import math
 
-  return dist1 ** 0.5 if dist1 >= 0 else dist2 ** 0.5
+def distance(a, b):
+  #pi - число pi, rad - радиус сферы (Земли)
+  rad = 6372
+
+  # в радианах
+  lat1  = a.lat  * math.pi / 180.
+  lat2  = b.lat  * math.pi / 180.
+  long1 = a.long * math.pi / 180.
+  long2 = b.long * math.pi / 180.
+
+  # косинусы и синусы широт и разницы долгот
+  cl1 = math.cos(lat1)
+  cl2 = math.cos(lat2)
+  sl1 = math.sin(lat1)
+  sl2 = math.sin(lat2)
+  delta = long2 - long1
+  cdelta = math.cos(delta)
+  sdelta = math.sin(delta)
+
+  # вычисления длины большого круга
+  y = math.sqrt(math.pow(cl2 * sdelta, 2) + math.pow(cl1 * sl2 - sl1 * cl2 * cdelta,2))
+  x = sl1 * sl2 + cl1 * cl2 * cdelta
+  ad = math.atan2(y, x)
+  dist = ad * rad
+  return dist
 
 result = stationsInternal.cartesian(stationsInternal) \
 .map(lambda pair: (pair[0].name, pair[1].name, distance(pair[0], pair[1]))) \
 .sortBy(lambda station: station[2], ascending=False) \
 .first()
+
+print(f"From station {result[0]} to station {result[1]} the distance is: {result[2]} in kilometers")
 ```
 
 Scala:
 
 ```Scala
-def distance(a: Station, b: Station) : Double = {
-		val dist1 = (pow(a.lat, 2) - pow(b.lat, 2)) + (pow(a.long, 2) - pow(b.long, 2))
-		val dist2 = (pow(b.lat, 2) - pow(a.lat, 2)) + (pow(b.long, 2) - pow(a.long, 2))
+def distance( a: Station, b: Station ) : Double = {
+		val rad = 6372
+		val lat1   = a.lat  * math.Pi / 180
+		val lat2   = b.lat  * math.Pi / 180
+		val long1  = a.long * math.Pi / 180
+		val long2  = b.long * math.Pi / 180
 
-		if (dist1 >= 0) return sqrt(dist1)
-		else return sqrt(dist2)
+		val cl1 = math.cos(lat1)
+		val cl2 = math.cos(lat2)
+		val sl1 = math.sin(lat1)
+		val sl2 = math.sin(lat2)
+		val delta = long2 - long1
+		val cdelta = math.cos(delta)
+		val sdelta = math.sin(delta)
+
+		val y = math.sqrt(math.pow(cl2 * sdelta, 2) + math.pow(cl1 * sl2 - sl1 * cl2 * cdelta, 2))
+		val x = sl1 * sl2 + cl1 * cl2 * cdelta
+		val ad = math.atan2(y, x)
+		val dist = ad * rad
+		return dist
 }
 
 val longestDistance = stationsInternal.cartesian(stationsInternal)
@@ -78,9 +116,9 @@ val longestDistance = stationsInternal.cartesian(stationsInternal)
 
 Результат:
 
-> From station SJSU - San Salvador at 9th to station Golden Gate at Polk the distance is: 12.877539087729783
+> From station SJSU - San Salvador at 9th to station Embarcadero at Sansome the distance is: 69.9318508210141 in kilometers
 
-![Result](https://i.imgur.com/0DOxYOn.png)
+![Result](https://i.imgur.com/vT7wvks.png)
 
 ## 3. Найти путь велосипеда с максимальным временем пробега через станции.
 

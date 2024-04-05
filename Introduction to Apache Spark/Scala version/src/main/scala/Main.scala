@@ -26,13 +26,26 @@ case class Trip(
 								 zipCode: String)
 
 object Main {
-
 	def distance( a: Station, b: Station ) : Double = {
-		val dist1 = (pow(a.lat, 2) - pow(b.lat, 2)) + (pow(a.long, 2) - pow(b.long, 2))
-		val dist2 = (pow(b.lat, 2) - pow(a.lat, 2)) + (pow(b.long, 2) - pow(a.long, 2))
+		val rad = 6372
+		val lat1   = a.lat  * math.Pi / 180
+		val lat2   = b.lat  * math.Pi / 180
+		val long1  = a.long * math.Pi / 180
+		val long2  = b.long * math.Pi / 180
 
-		if (dist1 >= 0) return sqrt(dist1)
-		else return sqrt(dist2)
+		val cl1 = math.cos(lat1)
+		val cl2 = math.cos(lat2)
+		val sl1 = math.sin(lat1)
+		val sl2 = math.sin(lat2)
+		val delta = long2 - long1
+		val cdelta = math.cos(delta)
+		val sdelta = math.sin(delta)
+
+		val y = math.sqrt(math.pow(cl2 * sdelta, 2) + math.pow(cl1 * sl2 - sl1 * cl2 * cdelta, 2))
+		val x = sl1 * sl2 + cl1 * cl2 * cdelta
+		val ad = math.atan2(y, x)
+		val dist = ad * rad
+		return dist
 	}
 
   def main(args: Array[String]): Unit = {

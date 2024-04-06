@@ -82,32 +82,32 @@ object RidesAndFaresExercise {
 
   class EnrichmentFunction extends RichCoFlatMapFunction[TaxiRide, TaxiFare, (TaxiRide, TaxiFare)] {
 
-		lazy val rideState: ValueState[TaxiRide] = getRuntimeContext.getState(
-			new ValueStateDescriptor[TaxiRide]("saved ride", classOf[TaxiRide]))
+    lazy val rideState: ValueState[TaxiRide] = getRuntimeContext.getState(
+      new ValueStateDescriptor[TaxiRide]("saved ride", classOf[TaxiRide]))
 
-		lazy val fareState: ValueState[TaxiFare] = getRuntimeContext.getState(
-			new ValueStateDescriptor[TaxiFare]("saved fare", classOf[TaxiFare]))
+    lazy val fareState: ValueState[TaxiFare] = getRuntimeContext.getState(
+      new ValueStateDescriptor[TaxiFare]("saved fare", classOf[TaxiFare]))
 
     override def flatMap1(ride: TaxiRide, out: Collector[(TaxiRide, TaxiFare)]): Unit = {
-			val fare = fareState.value
+      val fare = fareState.value
 
-			if (fare != null) {
-				fareState.clear()
-				out.collect((ride, fare))
-			} else {
-				rideState.update(ride)
-			}
+      if (fare != null) {
+        fareState.clear()
+        out.collect((ride, fare))
+      } else {
+        rideState.update(ride)
+      }
     }
 
     override def flatMap2(fare: TaxiFare, out: Collector[(TaxiRide, TaxiFare)]): Unit = {
-			val ride = rideState.value
+      val ride = rideState.value
 
-			if (ride != null) {
-				rideState.clear()
-				out.collect((ride, fare))
-			} else {
-				fareState.update(fare)
-			}
+      if (ride != null) {
+        rideState.clear()
+        out.collect((ride, fare))
+      } else {
+        fareState.update(fare)
+      }
     }
   }
 }
@@ -137,31 +137,32 @@ object HourlyTipsExercise {
     // start the data generator
     val fares = env.addSource(fareSourceOrTest(new TaxiFareSource(input, maxDelay, speed)))
 
-		val hourlyTips = fares
-			.map((f: TaxiFare) => (f.driverId, f.tip))
-			.keyBy(_._1)
-			.timeWindow(Time.hours(1))
-			.reduce(
-				(f1: (Long, Float), f2: (Long, Float)) => { (f1._1, f1._2 + f2._2) },
-				new WrapWithWindowInfo())
+    val hourlyTips = fares
+      .map((f: TaxiFare) => (f.driverId, f.tip))
+      .keyBy(_._1)
+      .timeWindow(Time.hours(1))
+      .reduce(
+        (f1: (Long, Float), f2: (Long, Float)) => { (f1._1, f1._2 + f2._2) },
+        new WrapWithWindowInfo()
+      )
 
-		val hourlyMax = hourlyTips
-			.timeWindowAll(Time.hours(1))
-			.maxBy(2)
+    val hourlyMax = hourlyTips
+      .timeWindowAll(Time.hours(1))
+      .maxBy(2)
 
     // print result on stdout
-		printOrTest(hourlyMax)
+    printOrTest(hourlyMax)
 
     // execute the transformation pipeline
     env.execute("Hourly Tips (scala)")
   }
 
-	class WrapWithWindowInfo() extends ProcessWindowFunction[(Long, Float), (Long, Long, Float), Long, TimeWindow] {
-		override def process(key: Long, context: Context, elements: Iterable[(Long, Float)], out: Collector[(Long, Long, Float)]): Unit = {
-			val sumOfTips = elements.iterator.next()._2
-			out.collect((context.window.getEnd(), key, sumOfTips))
-		}
-	}
+  class WrapWithWindowInfo() extends ProcessWindowFunction[(Long, Float), (Long, Long, Float), Long, TimeWindow] {
+    override def process(key: Long, context: Context, elements: Iterable[(Long, Float)], out: Collector[(Long, Long, Float)]): Unit = {
+      val sumOfTips = elements.iterator.next()._2
+      out.collect((context.window.getEnd(), key, sumOfTips))
+    }
+  }
 }
 ```
 
@@ -175,7 +176,6 @@ object ExpiringStateExercise {
   val unmatchedFares = new OutputTag[TaxiFare]("unmatchedFares") {}
 
   def main(args: Array[String]) {
-
     // parse parameters
     val params = ParameterTool.fromArgs(args)
     val ridesFile = params.get("rides", ExerciseBase.pathToRideData)
@@ -207,54 +207,55 @@ object ExpiringStateExercise {
 
   class EnrichmentFunction extends KeyedCoProcessFunction[Long, TaxiRide, TaxiFare, (TaxiRide, TaxiFare)] {
 
-		lazy val rideState: ValueState[TaxiRide] = getRuntimeContext.getState(
-			new ValueStateDescriptor[TaxiRide]("saved ride", classOf[TaxiRide]))
-		lazy val fareState: ValueState[TaxiFare] = getRuntimeContext.getState(
-			new ValueStateDescriptor[TaxiFare]("saved fare", classOf[TaxiFare]))
+    lazy val rideState: ValueState[TaxiRide] = getRuntimeContext.getState(
+      new ValueStateDescriptor[TaxiRide]("saved ride", classOf[TaxiRide]))
+
+    lazy val fareState: ValueState[TaxiFare] = getRuntimeContext.getState(
+      new ValueStateDescriptor[TaxiFare]("saved fare", classOf[TaxiFare]))
+
     override def processElement1(ride: TaxiRide,
                                  context: KeyedCoProcessFunction[Long, TaxiRide, TaxiFare, (TaxiRide, TaxiFare)]#Context,
                                  out: Collector[(TaxiRide, TaxiFare)]): Unit = {
-
-			val fare = fareState.value
-			if (fare != null) {
-				fareState.clear()
-				context.timerService.deleteEventTimeTimer(ride.getEventTime)
-				out.collect((ride, fare))
-			}
-			else {
-				rideState.update(ride)
-				// as soon as the watermark arrives, we can stop waiting for the corresponding fare
-				context.timerService.registerEventTimeTimer(ride.getEventTime)
-			}
+        val fare = fareState.value
+        if (fare != null) {
+          fareState.clear()
+          context.timerService.deleteEventTimeTimer(ride.getEventTime)
+          out.collect((ride, fare))
+        } else {
+          rideState.update(ride)
+          // as soon as the watermark arrives, we can stop waiting for the corresponding fare
+          context.timerService.registerEventTimeTimer(ride.getEventTime)
+        }
     }
 
     override def processElement2(fare: TaxiFare,
                                  context: KeyedCoProcessFunction[Long, TaxiRide, TaxiFare, (TaxiRide, TaxiFare)]#Context,
                                  out: Collector[(TaxiRide, TaxiFare)]): Unit = {
-			val ride = rideState.value
-			if (ride != null) {
-				rideState.clear()
-				context.timerService.deleteEventTimeTimer(ride.getEventTime)
-				out.collect((ride, fare))
-			}
-			else {
-				fareState.update(fare)
-				// as soon as the watermark arrives, we can stop waiting for the corresponding ride
-				context.timerService.registerEventTimeTimer(fare.getEventTime)
-			}
+      val ride = rideState.value
+
+      if (ride != null) {
+        rideState.clear()
+        context.timerService.deleteEventTimeTimer(ride.getEventTime)
+        out.collect((ride, fare))
+      } else {
+        fareState.update(fare)
+        // as soon as the watermark arrives, we can stop waiting for the corresponding ride
+        context.timerService.registerEventTimeTimer(fare.getEventTime)
+      }
     }
 
     override def onTimer(timestamp: Long,
                          ctx: KeyedCoProcessFunction[Long, TaxiRide, TaxiFare, (TaxiRide, TaxiFare)]#OnTimerContext,
                          out: Collector[(TaxiRide, TaxiFare)]): Unit = {
-			if (fareState.value != null) {
-				ctx.output(unmatchedFares, fareState.value)
-				fareState.clear()
-			}
-			if (rideState.value != null) {
-				ctx.output(unmatchedRides, rideState.value)
-				rideState.clear()
-			}
+      if (fareState.value != null) {
+        ctx.output(unmatchedFares, fareState.value)
+        fareState.clear()
+      }
+
+      if (rideState.value != null) {
+        ctx.output(unmatchedRides, rideState.value)
+        rideState.clear()
+      }
     }
   }
 }

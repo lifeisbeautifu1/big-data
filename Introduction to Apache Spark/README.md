@@ -18,20 +18,20 @@ Python:
 
 ```python
 bike_with_longest_duration = tripsInternal.keyBy(lambda trip: trip.bike_id) \
-.mapValues(lambda trip: trip.duration) \
-.reduceByKey(lambda firstDuration, secondDuration: firstDuration + secondDuration) \
-.sortBy(lambda trip: trip[1], ascending=False) \
-.first()
+	.mapValues(lambda trip: trip.duration) \
+	.reduceByKey(lambda firstDuration, secondDuration: firstDuration + secondDuration) \
+	.sortBy(lambda trip: trip[1], ascending=False) \
+	.first()
 ```
 
 Scala:
 
 ```Scala
 val bikeWithLongestDuration = tripsInternal.keyBy(trip => trip.bikeId)
-			.mapValues(trip => trip.duration)
-			.reduceByKey(_ + _)
-			.sortBy(trip => trip._2, ascending = false)
-			.first()
+	.mapValues(trip => trip.duration)
+	.reduceByKey(_ + _)
+	.sortBy(trip => trip._2, ascending = false)
+	.first()
 ```
 
 Результат:
@@ -76,9 +76,9 @@ def distance(a, b):
   return dist
 
 result = stationsInternal.cartesian(stationsInternal) \
-.map(lambda pair: (pair[0].name, pair[1].name, distance(pair[0], pair[1]))) \
-.sortBy(lambda station: station[2], ascending=False) \
-.first()
+		.map(lambda pair: (pair[0].name, pair[1].name, distance(pair[0], pair[1]))) \
+		.sortBy(lambda station: station[2], ascending=False) \
+		.first()
 
 print(f"From station {result[0]} to station {result[1]} the distance is: {result[2]} in kilometers")
 ```
@@ -87,31 +87,31 @@ Scala:
 
 ```Scala
 def distance( a: Station, b: Station ) : Double = {
-		val rad = 6372
-		val lat1   = a.lat  * math.Pi / 180
-		val lat2   = b.lat  * math.Pi / 180
-		val long1  = a.long * math.Pi / 180
-		val long2  = b.long * math.Pi / 180
+	val rad = 6372
+	val lat1   = a.lat  * math.Pi / 180
+	val lat2   = b.lat  * math.Pi / 180
+	val long1  = a.long * math.Pi / 180
+	val long2  = b.long * math.Pi / 180
 
-		val cl1 = math.cos(lat1)
-		val cl2 = math.cos(lat2)
-		val sl1 = math.sin(lat1)
-		val sl2 = math.sin(lat2)
-		val delta = long2 - long1
-		val cdelta = math.cos(delta)
-		val sdelta = math.sin(delta)
+	val cl1 = math.cos(lat1)
+	val cl2 = math.cos(lat2)
+	val sl1 = math.sin(lat1)
+	val sl2 = math.sin(lat2)
+	val delta = long2 - long1
+	val cdelta = math.cos(delta)
+	val sdelta = math.sin(delta)
 
-		val y = math.sqrt(math.pow(cl2 * sdelta, 2) + math.pow(cl1 * sl2 - sl1 * cl2 * cdelta, 2))
-		val x = sl1 * sl2 + cl1 * cl2 * cdelta
-		val ad = math.atan2(y, x)
-		val dist = ad * rad
-		return dist
+	val y = math.sqrt(math.pow(cl2 * sdelta, 2) + math.pow(cl1 * sl2 - sl1 * cl2 * cdelta, 2))
+	val x = sl1 * sl2 + cl1 * cl2 * cdelta
+	val ad = math.atan2(y, x)
+	val dist = ad * rad
+	return dist
 }
 
 val longestDistance = stationsInternal.cartesian(stationsInternal)
-		.map(pair => (pair._1.name, pair._2.name, distance(pair._1, pair_2)))
-		.sortBy(list => list._3, ascending = false)
-		.first()
+	.map(pair => (pair._1.name, pair._2.name, distance(pair._1, pair_2)))
+	.sortBy(list => list._3, ascending = false)
+	.first()
 ```
 
 Результат:
@@ -136,8 +136,8 @@ Scala:
 
 ```Scala
 val paths = tripsInternal.filter(trip => trip.bikeId == bikeWithLongestDuration._1)
-			.sortBy(trip => trip.startDate)
-			.take(10)
+	.sortBy(trip => trip.startDate)
+	.take(10)
 ```
 
 Результат:
@@ -163,16 +163,16 @@ Python:
 
 ```python
 bikes_count = tripsInternal.map(lambda trip: trip.bike_id) \
-.distinct() \
-.count()
+	.distinct() \
+	.count()
 ```
 
 Scala:
 
 ```Scala
 val bikesCount = tripsInternal.map(trip => trip.bikeId)
-			.distinct()
-			.count()
+	.distinct()
+	.count()
 ```
 
 Результат:
@@ -199,10 +199,10 @@ Scala:
 
 ```Scala
 val subscribers = tripsInternal.keyBy(trip => trip.zipCode)
-			.mapValues(trip => trip.duration)
-			.reduceByKey(_ + _)
-			.filter(trip => trip._2 > 3 * 60 * 60)
-			.take(10)
+	.mapValues(trip => trip.duration)
+	.reduceByKey(_ + _)
+	.filter(trip => trip._2 > 3 * 60 * 60)
+	.take(10)
 ```
 
 Результат:
